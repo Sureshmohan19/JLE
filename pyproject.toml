@@ -1,0 +1,31 @@
+[project]
+name = "miniJax"
+version = "0.1.0"
+description = "miniJax"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [
+  { name = "Suresh Neethimohan" }
+]
+
+# Add runtime dependencies here if needed
+dependencies = []
+
+[project.optional-dependencies]
+dev = []
+
+[build-system]
+requires = ["hatchling>=1.25.0"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+# Project managed by uv; defaults are fine
+
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/minijax"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/minijax"]
+
