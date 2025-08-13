@@ -1,16 +1,15 @@
 [project]
 name = "miniJax"
 version = "0.1.0"
-description = "miniJax"
+description = "miniJax - minimal version of JAX building mostly for ml research"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { file = "LICENSE" }
-authors = [
-  { name = "Suresh Neethimohan" }
-]
 
-# Add runtime dependencies here if needed
-dependencies = []
+# Runtime dependencies
+dependencies = [
+    "jaxlib>=0.6.2",
+    "numpy>=2.2.6",
+]
 
 [project.optional-dependencies]
 dev = []
@@ -24,8 +23,8 @@ build-backend = "hatchling.build"
 
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/minijax"]
+packages = ["minijax"]
 
 [tool.hatch.build.targets.sdist]
-include = ["src/minijax"]
+include = ["minijax"]
 
