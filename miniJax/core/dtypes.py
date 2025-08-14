@@ -66,7 +66,6 @@ _uint4_dtype: np.dtype = np.dtype(uint4)
 # Group these scalar types and dtypes into respective groups
 # We will need this a lot in the later sections
 _custom_float_scalar_types = [
-    bfloat16,
     float4_e2m1fn,
     float8_e3m4,
     float8_e4m3,
@@ -75,11 +74,10 @@ _custom_float_scalar_types = [
     float8_e8m0fnu,
     float8_e4m3b11fnuz,
     float8_e4m3fnuz,
-    float8_e5m2fnuz
+    float8_e5m2fnuz,
+    bfloat16,
 ]
-
 _custom_float_dtypes = [
-    _bfloat16_dtype,
     _float4_e2m1fn_dtype,
     _float8_e3m4_dtype,
     _float8_e4m3_dtype,
@@ -88,22 +86,10 @@ _custom_float_dtypes = [
     _float8_e8m0fnu_dtype,
     _float8_e4m3b11fnuz_dtype,
     _float8_e4m3fnuz_dtype,
-    _float8_e5m2fnuz_dtype
+    _float8_e5m2fnuz_dtype,
+    _bfloat16_dtype,
 ]
-
-_float4_types = [float4_e2m1fn]
 _float4_dtypes = [_float4_e2m1fn_dtype]
-
-_float8_types = [
-    float8_e3m4,
-    float8_e4m3,
-    float8_e5m2,
-    float8_e4m3fn,
-    float8_e8m0fnu,
-    float8_e4m3b11fnuz,
-    float8_e4m3fnuz,
-    float8_e5m2fnuz
-]
 _float8_dtypes = [
     _float8_e3m4_dtype,
     _float8_e4m3_dtype,
@@ -114,7 +100,6 @@ _float8_dtypes = [
     _float8_e4m3fnuz_dtype,
     _float8_e5m2fnuz_dtype
 ]
-
 _custom_int_scalar_types = [ 
     int2, 
     int4,
@@ -122,14 +107,6 @@ _custom_int_scalar_types = [
 _custom_uint_scalar_types = [
     uint2, 
     uint4
-]
-_custom_int_dtypes = [
-    _int2_dtype, 
-    _int4_dtype,
-]
-_custom_uint_dtypes = [
-    _uint2_dtype,
-    _uint4_dtype
 ]
 _int_dtypes = [
     _int2_dtype,
@@ -153,21 +130,20 @@ _default_types: dict[str, type[Any]] = {
     'f': float_,
     'c': complex_
 }
-
 _DEFAULT_TYPEMAP: dict[type, DTypeLike] = {
     bool: bool,
     int: int_,
     float: float_,
     complex: complex_
 }
-
+# dictionary to easily change from 64 to 32 
+# and also to inexact
 _change_64_to_32: dict[DType, DType] = {
     np.dtype('int64'): np.dtype('int32'),
     np.dtype('uint64'): np.dtype('uint32'),
     np.dtype('float64'): np.dtype('float32'),
     np.dtype('complex128'): np.dtype('complex64')
 }
-
 _change_to_inexact: dict[DType, DType] = {
     np.dtype(k): np.dtype(v) for k,v in [
         ('bool', 'float32'),
@@ -177,7 +153,6 @@ _change_to_inexact: dict[DType, DType] = {
         ('uint64', 'float64'), ('int64', 'float64'),
     ]
 }
-
 # We use 64-bit types for int, float, and complex to match NumPy's defaults
 # and ensure consistent precision across platforms.
 py_scalar_types: dict[type, DType] = {
@@ -186,18 +161,18 @@ py_scalar_types: dict[type, DType] = {
     float: np.dtype('float64'),
     complex: np.dtype('complex128')
 }
-
-miniJaxType = Union[type, DType]
-
+# incase if you are confused again and again seeing DType, its nothing other than np.dtype
+float0: np.dtype = np.dtype([('float0', np.void, 0)])
+miniJaxType = Union[type, DType] 
 _weakTypes: list[miniJaxType] = [int, float, complex]
-_registered_weakTypes: list[miniJaxType] = [] # will be empty until we call it 
+_registered_weakTypes: list[miniJaxType] = []
 _boolTypes: list[miniJaxType] = [np.dtype(bool)]
 _signedTypes: list[miniJaxType]
 _unsignedTypes: list[miniJaxType]
 _intTypes = list[miniJaxType]
 _floatTypes: list[miniJaxType]
 _complexTypes: list[miniJaxType]
-_stringTypes: list[miniJaxType] = [] # because it might be empty
+_stringTypes: list[miniJaxType] = []
 
 _unsignedTypes = [
     np.dtype(uint2),
@@ -229,22 +204,23 @@ _complexTypes = [
 if hasattr(np.dtypes, 'StringDType'):
     _stringTypes: list[miniJaxType] = [np.dtypes.StringDType()]
 
+# miniJax dtype set includes float0(will do later) and _stringTypes
 _miniJax_dtype_set = {
+    float0,
     *_boolTypes,
     *_intTypes,
     *_floatTypes,
-    *_complexTypes
+    *_complexTypes,
     *_stringTypes
 }
-
-# similar to Jax, no float0 and string types to the _miniJax_types
+# similar to _miniJax_dtypes_set, but no float0 and string types to the _miniJax_types,
+# following the same principle as Jax to make sure the array can only be numeric
 _miniJax_types = (
     _boolTypes +
     _intTypes +
     _floatTypes + 
     _complexTypes
 )
-
 _dtype_kinds: dict[str, set] = {
     'bool' : {*_boolTypes},
     'signed integer': {*_signedTypes},
@@ -269,7 +245,12 @@ class ExtendedDType():
     @abstractmethod
     def type(self) -> type: ...
 
-# Default dtypes
+IS_SUBDTYPE_TYPES = (type, np.dtype, ExtendedDType)
+
+# As we already mentioned above, 32bit is the default one in miniJax. 
+# (TODO: need to understand how x64_orNot reacts when the env value 
+# changes when loading the function. If it doesn't change dynamically, 
+# then we really need to delete this variable and use config.enable_x64.value
 def default_int_dtype() -> DType:
     return np.dtype(np.int64) if x64_orNot else np.dtype(np.int32)
 
@@ -299,19 +280,7 @@ def to_complex(dtype: DTypeLike) -> DType:
     flo = to_inexact(dtype)
     return np.dtype('complex128') if flo in [np.dtype('float64'), np.dtype('complex128')] else np.dtype('complex64')
 
-def miniJax_dtype(
-        type_obj: DTypeLike | None, 
-        align: bool = False, 
-        copy: bool = False
-) -> DType:
-    if type_obj is None:
-        type_obj = float_
-    elif issubdtype(type_obj, extended):
-        return type_obj
-    elif isinstance(type_obj, type):
-        type_obj = _DEFAULT_TYPEMAP.get(type_obj, type_obj)
-    return np.dtype(type_obj, align=align, copy=copy)
-
+# the following two are useful but most probably not needed.
 def ctypes_supports_inf(dtype: DTypeLike) -> bool:
     typ = np.dtype(dtype).type
     if typ in {float4_e2m1fn, float8_e4m3fn, float8_e4m3b11fnuz, 
@@ -320,7 +289,10 @@ def ctypes_supports_inf(dtype: DTypeLike) -> bool:
     return issubdtype(dtype, np.inexact)
 
 def bit_width(dtype: DTypeLike) -> int:
-    """we are getting bit width from ml_dtypes and not a custom implementaion"""
+    """
+    we are getting bit width from ml_dtypes and not a custom implementaion. 
+    Its actually much better approach because the custom types are defined there.
+    """
     if dtype == np.dtype(bool):
         return 8
     elif issubdtype(dtype, np.integer):
@@ -332,9 +304,18 @@ def bit_width(dtype: DTypeLike) -> int:
     else:
         raise ValueError(f"check the dtype please as '{dtype} is unrecognised'")
 
-IS_SUBDTYPE_TYPES = (type, np.dtype, ExtendedDType)
+# main functions are starting here
+def miniJax_dtype(type_obj: DTypeLike | None, align: bool = False, copy: bool = False) -> DType:
+    if type_obj is None:
+        type_obj = float_
+    elif issubdtype(type_obj, extended):
+        return type_obj
+    elif isinstance(type_obj, type):
+        type_obj = _DEFAULT_TYPEMAP.get(type_obj, type_obj)
+    return np.dtype(type_obj, align=align, copy=copy)
 
-# default functions but modified for our use case
+# existing default functions in Numpy but modified for our use case 
+# to accomodate custom types from ml_dtypes that we are using
 def _issubclass(a: Any, b: Any) -> bool:
     """Same as default python issubclass. Infact, if you look at the code,
     you can see we are just using issubclass only. 
@@ -365,8 +346,9 @@ def _issubtype_cached(
     b: type | np.dtype | ExtendedDType
 ) -> bool:
     """
-    Theoretically we can place this function inside of issubdtype but only for caching
-    performance and normal performance (dtype check happens a lot more)
+    Theoretically we can place this function inside of issubdtype but for caching
+    performance, we are separating it here. And honestly I think that's the only 
+    reason I know of.
     """
     a_is_type = isinstance(a, type)
     b_is_type = isinstance(b, type)
@@ -397,8 +379,14 @@ def _issubtype_cached(
     return bool(np.issubdtype(a_scalar, b_scalar))
     
 # canonicalize dtypes
+# probably one of the most important API in this file
 @functools.cache
 def _canonicalize_dtypes(x64_enabled: bool, allow_extended: bool, dtype: Any) -> DType | ExtendedDType:
+    """
+    For me and other developers if anyone is there, the private function params and public api function
+    params are reversed to make sure they are not confused. 
+    Jax writers are so good man. Kudos!
+    """
     if issubdtype(dtype, extended):
         if not allow_extended:
             raise ValueError(f"Canonicalize dtypes method called with allow_extended=False "
@@ -410,20 +398,14 @@ def _canonicalize_dtypes(x64_enabled: bool, allow_extended: bool, dtype: Any) ->
     except TypeError as e:
         raise TypeError(f"Numpy.dtype failed to recoginise your dtype") from e
     
-    if x64_enabled:
-        return dtype_
-    else:
-        return _change_64_to_32.get(dtype_, dtype_)
+    return dtype_ if x64_enabled else _change_64_to_32.get(dtype_, dtype_)
 
-# public function
+# public canonicalize_dtype function
 def canonicalize_dtype(dtype: Any, allow_extended: bool = False) -> DType | ExtendedDType:
     return _canonicalize_dtypes(x64_orNot, allow_extended, dtype)
 
 # dtype related functions
-def isdtype(
-        dtype: DTypeLike, 
-        kind: str | DTypeLike | tuple[str | DTypeLike, ...]
-) -> bool:
+def isdtype(dtype: DTypeLike, kind: str | DTypeLike | tuple[str | DTypeLike, ...]) -> bool:
     options: set[DType] = set()
     dtype_ = np.dtype(dtype)
     kind_tuple: tuple[str | DTypeLike, ...] = ( kind if isinstance(kind, tuple) else (kind,))
@@ -443,8 +425,10 @@ def isdtype(
     return dtype_ in options
 
 def _miniJax_type(dtype: DType, weak_type: bool) -> miniJaxType:
-    # if weak type
     """
+    Sometimes the return type if weak_type gets confused. 
+    So a little explanation is below:
+
     return type(dtype.type(0).item())
 
     dtype.type gives the NumPy scalar class, e.g., np.int32.
@@ -452,6 +436,7 @@ def _miniJax_type(dtype: DType, weak_type: bool) -> miniJaxType:
     .item() converts it to a Python scalar.
     type(...) gets the Python type (int or float).
     """
+    # if weak type
     if weak_type:
         if dtype == bool:
             return dtype
@@ -461,6 +446,7 @@ def _miniJax_type(dtype: DType, weak_type: bool) -> miniJaxType:
     # if not weak type
     return dtype
 
+# main dtype function - just like numpy.dtype
 def dtype(x: Any, canonicalize: bool = False) -> DType:
     if x is None:
         raise ValueError(f"Invalid type obj='{x}' provided to dtype.")
@@ -507,8 +493,6 @@ def scalar_type(x: Any) -> type:
     
 def _scalar_to_dtype(typ: type, value: Any = None) -> DType:
     dtype = canonicalize_dtype(py_scalar_types[typ])
-
-    # pure additonal check but its good to check it here rather than in runtime
     if type is int and value is not None:
         intinfo = np.iinfo(dtype)
         if value < intinfo.min or value > intinfo.max:
@@ -519,23 +503,6 @@ def _scalar_to_dtype(typ: type, value: Any = None) -> DType:
 def is_python_scalar(x: Any) -> bool:
     return type(x) in py_scalar_types
 
-def coerce_to_array(x: Any, dtype: DTypeLike | None = None) -> np.ndarray:
-    # if dtype is not None
-    if dtype is not None and type(x) in py_scalar_types:
-        dtype = _scalar_to_dtype(type(x), x)
-        
-    # normal circumstance
-    return np.asarray(x, dtype)
-
-# weak types
-def register_weakType(typ: type):
-    _registered_weakTypes.append(typ)
-
-def is_weakly_typed(x: Any) -> bool:
-    x_ = type(x)
-    if x_ in _weakTypes or x_ in _registered_weakTypes:
-        return True
-
 def check_valid_dtypes(dtype: DType) -> None:
     if dtype not in _miniJax_dtype_set:
         raise TypeError(f"dtype: '{dtype}' is not a valid miniJax type")
@@ -543,7 +510,21 @@ def check_valid_dtypes(dtype: DType) -> None:
 def is_string_dtype(dtype: DTypeLike) -> bool:
     return dtype in _stringTypes
 
-def short_dtype_namee(dtype) -> str:
+def coerce_to_array(x: Any, dtype: DTypeLike | None = None) -> np.ndarray:
+    if dtype is not None and type(x) in py_scalar_types:
+        dtype = _scalar_to_dtype(type(x), x)
+    return np.asarray(x, dtype)
+
+# weak types
+def register_weakType(typ: type) -> None:
+    _registered_weakTypes.append(typ)
+
+def is_weakly_typed(x: Any) -> bool:
+    x_ = type(x)
+    if x_ in _weakTypes or x_ in _registered_weakTypes:
+        return True
+    
+def short_dtype_name(dtype) -> str:
     if isinstance(dtype, extended):
         return str(dtype)
     else:
@@ -555,9 +536,10 @@ def short_dtype_namee(dtype) -> str:
                 .replace('complex', 'c')
         )
     
-# type promotion related code and functions
+# type promotion related code and functions. 
+# important ones so read carefully and understand/improve this
 def _type_promotion_lattice(method: str) -> dict[miniJaxType, list[miniJaxType]]:
-    # first destructure the miniJax style
+    # first destructure the _miniJax_types
     assert method in ('standard', 'strict'
     ), f"the entered method value={method} is not valid.'standard' or 'strict' are the two possible ones" 
     b1, = _boolTypes
@@ -566,8 +548,8 @@ def _type_promotion_lattice(method: str) -> dict[miniJaxType, list[miniJaxType]]
     c4, c8 = _complexTypes
     i_, f_, c_ = _weakTypes
 
+    out: dict[miniJaxType, list[miniJaxType]]
     if method == "standard":
-        out: dict[miniJaxType, list[miniJaxType]]
         out = {
             b1: [i_],
             i_: [u1, uint2, uint4, i1, int2, int4],
@@ -593,7 +575,6 @@ def _type_promotion_lattice(method: str) -> dict[miniJaxType, list[miniJaxType]]
         }
         return out
     elif method == "strict":
-        out: dict[miniJaxType, list[miniJaxType]]
         out = {
             i_: [f_] + _intTypes,
             f_: [c_] + _floatTypes,
@@ -709,6 +690,8 @@ def result_type(*args: Any, return_weak_type: bool = False) -> DType | tuple[DTy
     
     return (dtype, weak_type) if return_weak_type else dtype
 
+
+# users might want these functions 
 def check_user_dtype_supported(dtype):
     if issubdtype(dtype, extended):
         return
@@ -716,7 +699,7 @@ def check_user_dtype_supported(dtype):
         return
     np_type = np.dtype(dtype)
     is_custom_type = np_type.type in [*_custom_float_scalar_types, int2, int4, uint2, uint4]
-    if (np_type.kind not in 'biufcT' and not is_custom_type):
+    if (np_type.kind not in 'biufcT' and not is_custom_type and not dtype==float0):
         raise TypeError(f"Not valid dtype={dtype} provided")
     if dtype is not None and np_type != canonicalize_dtype(np_type):
         truncated_dtype = canonicalize_dtype(np_type).name
