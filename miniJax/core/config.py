@@ -1,4 +1,4 @@
-"""miniJax.config"""
+"""miniJax.core.config"""
 
 from __future__ import annotations
 
@@ -297,4 +297,10 @@ def bool_state(
 enable_x64 = bool_state(
     name='miniJax_enable_x64',
     default=False, # 32 bit is the standard in miniJax
+)
+
+numpy_dtype_promotion = enum_state(
+    name='jax_numpy_dtype_promotion',
+    enum_values=['standard', 'strict'],
+    default='standard',
 )

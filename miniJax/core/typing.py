@@ -1,4 +1,4 @@
-"""miniJax._basearray"""
+"""miniJax.core.typing"""
 
 from typing import Any, Union, Protocol, runtime_checkable
 import numpy as np
