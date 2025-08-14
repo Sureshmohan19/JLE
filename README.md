@@ -1,1 +1,3 @@
-minimal version of jax building mostly for ml research
+miniJax
+
+minimal version of JAX building mostly for ml research

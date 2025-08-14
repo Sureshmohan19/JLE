@@ -1,6 +1,6 @@
 [project]
 name = "miniJax"
-version = "0.1.0"
+version = miniJax.version
 description = "miniJax - minimal version of JAX building mostly for ml research"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -8,6 +8,7 @@ requires-python = ">=3.10"
 # Runtime dependencies
 dependencies = [
     "jaxlib>=0.6.2",
+    "ml-dtypes>=0.5.3",
     "numpy>=2.2.6",
 ]
 
@@ -27,4 +28,3 @@ packages = ["minijax"]
 
 [tool.hatch.build.targets.sdist]
 include = ["minijax"]
-

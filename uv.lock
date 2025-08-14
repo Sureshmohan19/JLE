@@ -79,6 +79,7 @@ source = { editable = "." }
 dependencies = [
     { name = "jaxlib", version = "0.6.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "jaxlib", version = "0.7.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "ml-dtypes" },
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.3.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
 ]
@@ -86,6 +87,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "jaxlib", specifier = ">=0.6.2" },
+    { name = "ml-dtypes", specifier = ">=0.5.3" },
     { name = "numpy", specifier = ">=2.2.6" },
 ]
 provides-extras = ["dev"]
