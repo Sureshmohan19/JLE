@@ -1,7 +1,7 @@
 [project]
-name = "miniJax"
-version = miniJax.version
-description = "miniJax - minimal version of JAX building mostly for ml research"
+name = "JLE"
+version = JLE.version
+description = "JLE(JAX Like Engine)"
 readme = "README.md"
 requires-python = ">=3.10"
 
@@ -24,7 +24,7 @@ build-backend = "hatchling.build"
 
 
 [tool.hatch.build.targets.wheel]
-packages = ["minijax"]
+packages = ["JLE"]
 
 [tool.hatch.build.targets.sdist]
-include = ["minijax"]
+include = ["JLE"]

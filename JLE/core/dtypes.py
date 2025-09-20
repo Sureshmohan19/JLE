@@ -1,4 +1,4 @@
-"""miniJax.core.dtypes"""
+"""JLE.core.dtypes"""
 
 from __future__ import annotations
 
@@ -10,9 +10,9 @@ import numpy as np
 from abc import abstractmethod
 from typing import Any, Union, cast
 
-from miniJax.core import config
-from miniJax.core.typing import DTypeLike, DType
-from miniJax.core.errors import TypePromotionError
+from JLE.core import config
+from JLE.core.typing import DTypeLike, DType
+from JLE.core.errors import TypePromotionError
 
 x64_orNot: bool = config.enable_x64.value
 int_info = ml_dtypes.iinfo
