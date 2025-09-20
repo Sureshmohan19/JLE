@@ -1,15 +1,13 @@
 [project]
-name = "JLE"
-version = JLE.version
-description = "JLE(JAX Like Engine)"
+name = "jle"
+version = "0.1.0"
+description = "JLE (JAX Like Engine)"
 readme = "README.md"
 requires-python = ">=3.10"
-
-# Runtime dependencies
 dependencies = [
     "jaxlib>=0.6.2",
     "ml-dtypes>=0.5.3",
-    "numpy>=2.2.6",
+    "numpy>=2.2.6"
 ]
 
 [project.optional-dependencies]
@@ -21,7 +19,6 @@ build-backend = "hatchling.build"
 
 [tool.uv]
 # Project managed by uv; defaults are fine
-
 
 [tool.hatch.build.targets.wheel]
 packages = ["JLE"]
