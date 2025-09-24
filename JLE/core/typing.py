@@ -1,5 +1,6 @@
 """JLE.core.typing"""
 
+from collections.abc import Sequence
 from typing import Any, Union, Protocol, runtime_checkable
 import numpy as np
 
@@ -23,3 +24,7 @@ DTypeLike = Union[
     SupportsDType
 ]
 
+# Shapes can simply be ints but sometimes we need to make sure 
+# they support texts inside of that sequence
+DimSize = Union[int, Any]
+Shape = Sequence[DimSize]
