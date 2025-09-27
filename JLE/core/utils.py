@@ -5,7 +5,11 @@ from __future__ import annotations
 import functools
 from typing import Any, Callable, TypeVar, cast
 
+from jaxlib import utils as jaxlib_utils
+
 T = TypeVar("T")
+
+safe_zip = jaxlib_utils.safe_zip
 
 def _unwrap_func(obj: Callable) -> Callable:
     """Get the underlying function from property/cached_property if needed."""
@@ -37,3 +41,13 @@ def use_cpp_class(cpp_cls: type[Any]) -> Callable[[type[T]], type[T]]:
         return cpp_cls
     
     return wrapper
+
+def use_cpp_method(is_enabled: bool = True) -> Callable[[T], T]:
+    assert isinstance(is_enabled, bool), "is_enabled argument in use_cpp_method should be a bool type"
+    
+    def decorator(meth):
+        if is_enabled:
+            unwrapped_function = _unwrap_func(meth)
+            unwrapped_function._use_cpp = True
+        return meth
+    return decorator
